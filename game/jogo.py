@@ -10,7 +10,7 @@ pygame.init()
 
 # Window setup
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Z-Killer')
+pygame.display.set_caption('Z-Crusher')
 clock = pygame.time.Clock()
 
 # Load images
