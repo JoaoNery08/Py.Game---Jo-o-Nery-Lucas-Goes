@@ -552,3 +552,159 @@ def draw_extra_lives(window, player):
     life_icon = pygame.transform.scale(POWERUP_IMAGES['extra_life'], (80, 80))
     for i in range(player.extra_lives):
         window.blit(life_icon, (10 + i * 35, HEIGHT - 90))
+
+def show_character_select():
+    global selected_character, game_state
+    
+    window.blit(start_screen_image, (0, 0))
+
+    title_text = font.render("Select Your Character", True, (255, 255, 255))
+    window.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 50))
+    
+    #Opções personagem
+    character_rects = {}
+    x_positions = [WIDTH/5, WIDTH * 2/5, WIDTH * 3/5, WIDTH * 4/5] 
+    for i, (char_name, config) in enumerate(character_configs.items()):
+        scaled_img = pygame.transform.scale(config['image'], (150, 150))
+        rect = scaled_img.get_rect(center=(x_positions[i], HEIGHT//2))
+        window.blit(scaled_img, rect)
+        character_rects[char_name] = rect
+        
+        if char_name == selected_character:
+            pygame.draw.rect(window, (0, 255, 0), rect, 3)
+    
+    #Voltar 
+    back_button_rect = pygame.Rect(50, HEIGHT - 100, 200, 50)
+    pygame.draw.rect(window, (255, 0, 0), back_button_rect)
+    back_text = font.render("Back", True, (255, 255, 255))
+    window.blit(back_text, (back_button_rect.centerx - back_text.get_width()//2, 
+                          back_button_rect.centery - back_text.get_height()//2))
+    
+    pygame.display.update()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if music_loaded:
+                    pygame.mixer.music.stop()
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                
+                for char_name, rect in character_rects.items():
+                    if rect.collidepoint(mouse_pos):
+                        selected_character = char_name
+                        reset_game(selected_character)
+                        return START_SCREEN
+                
+                if back_button_rect.collidepoint(mouse_pos):
+                    return START_SCREEN
+                    
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return START_SCREEN
+
+def show_start_screen():
+    if music_loaded:
+        pygame.mixer.music.play(-1)  #Música em loop
+    
+    window.blit(start_screen_image, (0, 0))
+    
+    #Start 
+    start_button_rect = start_button_image.get_rect(center=(WIDTH//2, HEIGHT//2))
+    window.blit(start_button_image, start_button_rect)
+    
+    #Character button
+    char_select_button_rect = character_select_button_image.get_rect(center=(WIDTH//2, HEIGHT//2 + 110))
+    window.blit(character_select_button_image, char_select_button_rect)
+    
+    #Ranking button
+    ranking_button_rect = ranking_button_image.get_rect(center=(WIDTH//2, HEIGHT//2 + 220))
+    window.blit(ranking_button_image, ranking_button_rect)
+    
+    pygame.display.update()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if music_loaded:
+                    pygame.mixer.music.stop()
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if start_button_rect.collidepoint(mouse_pos):
+                    return GET_PLAYER_NAME
+                if char_select_button_rect.collidepoint(mouse_pos):
+                    return CHARACTER_SELECT
+                if ranking_button_rect.collidepoint(mouse_pos):
+                    return SHOW_RANKING
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    if music_loaded:
+                        pygame.mixer.music.stop()
+                    pygame.quit()
+                    exit()
+                waiting = False
+    return GAME_ACTIVE
+
+def show_get_player_name():
+    global player_name
+    
+    input_active = True
+    input_text = ""
+    
+    while input_active:
+        window.blit(start_screen_image, (0, 0))
+
+        title_text = title_font.render("Enter Your Name", True, (255, 255, 255))
+        window.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//3))
+
+        input_rect = pygame.Rect(WIDTH//2 - 150, HEIGHT//2, 300, 50)
+        pygame.draw.rect(window, (255, 255, 255), input_rect, 2)
+
+        text_surface = font.render(input_text, True, (255, 255, 255))
+        window.blit(text_surface, (input_rect.x + 10, input_rect.y + 10))
+
+        submit_button = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 80, 200, 50)
+        pygame.draw.rect(window, (0, 255, 0), submit_button)
+        submit_text = font.render("Start Game", True, (0, 0, 0))
+        window.blit(submit_text, (submit_button.centerx - submit_text.get_width()//2, 
+                                submit_button.centery - submit_text.get_height()//2))
+        
+        pygame.display.update()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if music_loaded:
+                    pygame.mixer.music.stop()
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if submit_button.collidepoint(event.pos):
+                    if input_text.strip() != "":
+                        player_name = input_text.strip()
+                        if music_loaded:
+                            pygame.mixer.music.stop()
+                        reset_game(selected_character)
+                        return GAME_ACTIVE
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    if input_text.strip() != "":
+                        player_name = input_text.strip()
+                        if music_loaded:
+                            pygame.mixer.music.stop()
+                        reset_game(selected_character)
+                        return GAME_ACTIVE
+                elif event.key == pygame.K_BACKSPACE:
+                    input_text = input_text[:-1]
+                else:
+                    if len(input_text) < 15:  #Limite de caracteres
+                        input_text += event.unicode
+                if event.key == pygame.K_ESCAPE:
+                    return START_SCREEN
+    
+    return GAME_ACTIVE
