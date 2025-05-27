@@ -144,3 +144,168 @@ def add_to_ranking(name, score):
     ranking = ranking[:10]
     save_ranking(ranking)
     return ranking
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, character_type='musculoso'):
+        super().__init__()
+        config = character_configs[character_type]
+        self.pos = pygame.math.Vector2(player_start_x, player_start_y)
+        self.character_type = character_type
+        self.image = pygame.transform.rotozoom(config['image'], 95, config['size'])
+        self.base_player_image = self.image
+        self.hitbox_rect = self.base_player_image.get_rect(center=self.pos)
+        self.rect = self.hitbox_rect.copy()
+        self.mask = pygame.mask.from_surface(self.image)  # Collision mask
+        self.speed = config['speed']
+        self.original_speed = self.speed
+        self.shoot = False
+        self.shoot_cooldown = 0
+        self.bullet_cooldown = config['bullet_cooldown']
+        self.gun_barrel_offset = pygame.math.Vector2(GUN_BARREL_OFFSET_X, GUN_BARREL_OFFSET_Y)
+        self.max_health = config['health']
+        self.current_health = config['health']
+        self.invincible_timer = 0
+        self.alive = True
+        self.angle = 0
+        self.bullet_speed = config['bullet_speed']
+        self.bullet_damage = config['bullet_damage']
+        self.bullet_scale = config['bullet_scale']
+        self.bullet_lifetime = config['bullet_lifetime']
+        
+        # Powerup status
+        self.extra_lives = 0
+        self.max_extra_lives = 2
+        self.is_immune = False
+        self.immune_timer = 0
+        self.speed_boost_timer = 0
+        self.speed_boost_active = False
+
+        # Health bars
+        self.health_bar_full = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/full.png').convert_alpha(), 0, 0.5)
+        self.health_bar_75 = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/75.png').convert_alpha(), 0, 0.5)
+        self.health_bar_50 = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/50.png').convert_alpha(), 0, 0.5)
+        self.health_bar_25 = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/25.png').convert_alpha(), 0, 0.5)
+
+    def draw_health_bar(self, window):
+        if self.current_health > 75:
+            window.blit(self.health_bar_full, (0, 0))
+        elif self.current_health > 50:
+            window.blit(self.health_bar_75, (0, 0))
+        elif self.current_health > 25:
+            window.blit(self.health_bar_50, (0, 0))
+        else:
+            window.blit(self.health_bar_25, (0, 0))
+
+    def take_damage(self, damage_percent=0.2):
+        if self.invincible_timer == 0 and self.alive and not self.is_immune:
+            damage_amount = self.max_health * damage_percent
+            self.current_health -= damage_amount
+            self.invincible_timer = 60
+            if self.current_health <= 0:
+                if self.extra_lives > 0:
+                    self.extra_lives -= 1
+                    self.current_health = self.max_health
+                else:
+                    self.current_health = 0
+                    self.alive = False
+                    self.kill()
+
+    def activate_powerup(self, powerup_type):
+        if powerup_type == 'health':
+            self.current_health = self.max_health
+        elif powerup_type == 'immunity':
+            self.is_immune = True
+            self.immune_timer = pygame.time.get_ticks() + POWERUP_IMMUNITY_DURATION
+        elif powerup_type == 'nuke':
+            for enemy in enemy_group:
+                enemy.kill()
+        elif powerup_type == 'speed':
+            self.speed = self.original_speed * 2  # 100% mais rápido
+            self.speed_boost_active = True
+            self.speed_boost_timer = pygame.time.get_ticks() + POWERUP_IMMUNITY_DURATION
+        elif powerup_type == 'extra_life':
+            if self.extra_lives < self.max_extra_lives:
+                self.extra_lives += 1
+
+    def player_rotation(self):
+        if not self.alive:
+            return
+            
+        self.mouse_coords = pygame.mouse.get_pos()
+        self.mouse_player_x = (self.mouse_coords[0] - self.hitbox_rect.centerx)
+        self.mouse_player_y = (self.mouse_coords[1] - self.hitbox_rect.centery)
+        self.angle = math.degrees(math.atan2(self.mouse_player_y, self.mouse_player_x))
+        self.image = pygame.transform.rotate(self.base_player_image, -self.angle)
+        self.rect = self.image.get_rect(center=self.hitbox_rect.center)
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def user_input(self):
+        if not self.alive:
+            return
+            
+        self.speed_x = 0
+        self.speed_y = 0
+
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_w]:
+            self.speed_y = -self.speed
+        if keys[pygame.K_s]:
+            self.speed_y = self.speed
+        if keys[pygame.K_d]:
+            self.speed_x = self.speed
+        if keys[pygame.K_a]:
+            self.speed_x = -self.speed
+
+        if self.speed_x != 0 and self.speed_y != 0:
+            self.speed_x /= math.sqrt(2)
+            self.speed_y /= math.sqrt(2)
+
+        if pygame.mouse.get_pressed()[0] or keys[pygame.K_SPACE]:
+            self.is_shooting()
+            self.shoot = True
+        else:
+            self.shoot = False
+
+    def is_shooting(self):
+        if self.shoot_cooldown == 0 and self.alive:
+            self.shoot_cooldown = self.bullet_cooldown
+            spawn_bullet_pos = self.pos + self.gun_barrel_offset.rotate(-self.angle)
+            bullet = Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, 
+                          self.bullet_speed, self.bullet_damage, 
+                          self.bullet_scale, self.bullet_lifetime)
+            bullet_group.add(bullet)
+            all_sprites.add(bullet)
+            shoot_sound.play()  
+
+    def move(self):
+        if not self.alive:
+            return
+            
+        self.pos += pygame.math.Vector2(self.speed_x, self.speed_y)
+        self.pos.x = max(self.hitbox_rect.width // 2, min(self.pos.x, WIDTH - self.hitbox_rect.width // 2))
+        self.pos.y = max(self.hitbox_rect.height // 2, min(self.pos.y, HEIGHT - self.hitbox_rect.height // 2))
+        self.hitbox_rect.center = self.pos
+        self.rect.center = self.hitbox_rect.center
+
+    def update(self):
+        if not self.alive:
+            return
+            
+        current_time = pygame.time.get_ticks()
+        if self.is_immune and current_time > self.immune_timer:
+            self.is_immune = False
+        
+        if self.speed_boost_active and current_time > self.speed_boost_timer:
+            self.speed = self.original_speed
+            self.speed_boost_active = False
+            
+        self.user_input()
+        self.move()
+        self.player_rotation()
+
+        if self.invincible_timer > 0:
+            self.invincible_timer -= 1
+
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= 1
