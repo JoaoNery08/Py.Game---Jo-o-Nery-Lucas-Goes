@@ -708,3 +708,150 @@ def show_get_player_name():
                     return START_SCREEN
     
     return GAME_ACTIVE
+
+def show_ranking():
+    ranking = load_ranking()
+    
+    window.blit(start_screen_image, (0, 0))
+
+    title_text = title_font.render("TOP 10 PLAYERS", True, (255, 255, 255))
+    window.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 50))
+
+    for i, entry in enumerate(ranking[:10]):  
+        name = entry['name']
+        score = entry['score']
+        rank_text = ranking_font.render(f"{i+1}. {name}: {score}", True, (255, 255, 255))
+        window.blit(rank_text, (WIDTH//2 - rank_text.get_width()//2, 150 + i * 50))
+    
+    back_button = pygame.Rect(WIDTH//2 - 100, HEIGHT - 100, 200, 50)
+    pygame.draw.rect(window, (255, 0, 0), back_button)
+    back_text = font.render("Back", True, (255, 255, 255))
+    window.blit(back_text, (back_button.centerx - back_text.get_width()//2, 
+                          back_button.centery - back_text.get_height()//2))
+    
+    pygame.display.update()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if music_loaded:
+                    pygame.mixer.music.stop()
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if back_button.collidepoint(event.pos):
+                    return START_SCREEN
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return START_SCREEN
+
+def show_game_over_screen():
+    if music_loaded:
+        pygame.mixer.music.stop()
+        game_over_music.play()
+    
+    window.blit(game_over_image, (0, 0))
+    final_score_text = font.render(f"Final Score: {score}", True, (255, 255, 255))
+    window.blit(final_score_text, (WIDTH // 2 - 100, HEIGHT // 2 + 200))
+    
+    if player_name:
+        add_to_ranking(player_name, score)
+    
+    pygame.display.update()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if music_loaded:
+                    game_over_music.stop()
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    if music_loaded:
+                        game_over_music.stop()
+                    pygame.quit()
+                    exit()
+                waiting = False
+    if music_loaded:
+        game_over_music.stop()
+    reset_game(selected_character)
+    return START_SCREEN
+
+def reset_game(character_type='musculoso'):
+    global all_sprites, bullet_group, enemy_group, player, score, wave, powerup_group, last_powerup_spawn_time
+    
+    all_sprites = pygame.sprite.Group()
+    bullet_group = pygame.sprite.Group()
+    enemy_group = pygame.sprite.Group()
+    powerup_group = pygame.sprite.Group()
+    
+    player = Player(character_type)
+    all_sprites.add(player)
+    score = 0
+    wave = 1
+    last_powerup_spawn_time = 0
+    spawn_wave(wave)
+
+all_sprites = pygame.sprite.Group()
+bullet_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
+powerup_group = pygame.sprite.Group()
+
+player = Player(selected_character)
+all_sprites.add(player)
+
+wave = 1
+spawn_wave(wave)
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            if music_loaded:
+                pygame.mixer.music.stop()
+            running = False
+
+    if game_state == START_SCREEN:
+        game_state = show_start_screen()
+    elif game_state == CHARACTER_SELECT:
+        game_state = show_character_select()
+    elif game_state == GET_PLAYER_NAME:
+        game_state = show_get_player_name()
+    elif game_state == SHOW_RANKING:
+        game_state = show_ranking()
+    elif game_state == GAME_ACTIVE:
+        if len(enemy_group) == 0 and player.alive:
+            wave += 1
+            spawn_wave(wave)
+
+        current_time = pygame.time.get_ticks()
+        if (current_time - last_powerup_spawn_time > POWERUP_SPAWN_INTERVAL and 
+            random.random() < POWERUP_SPAWN_CHANCE and len(powerup_group) == 0):
+            last_powerup_spawn_time = current_time
+            powerup_type = random.choice(['health', 'immunity', 'nuke', 'speed', 'extra_life'])
+            powerup = Powerup(powerup_type)
+            powerup_group.add(powerup)
+            all_sprites.add(powerup)
+
+        window.blit(background, (0, 0))
+        all_sprites.draw(window)
+        all_sprites.update()
+        
+        if player.alive:
+            player.draw_health_bar(window)
+            draw_score(window, score)
+            draw_wave(window, wave)
+            draw_extra_lives(window, player) 
+        else:
+            game_state = GAME_OVER
+    elif game_state == GAME_OVER:
+        game_state = show_game_over_screen()
+    
+    pygame.display.update()
+    clock.tick(FPS)
+
+pygame.quit()
+exit()
