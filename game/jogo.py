@@ -309,3 +309,135 @@ class Player(pygame.sprite.Sprite):
 
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
+
+class Bullet(pygame.sprite.Sprite):
+    def init(self, x, y, angle, speed, damage, scale, lifetime):
+        super().init()
+        self.image = pygame.image.load('assets/image/Weapons/small_dot.png').convert_alpha()
+        self.image = pygame.transform.rotozoom(self.image, 180, scale)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.x = x
+        self.y = y
+        self.angle = angle
+        self.speed = speed
+        self.damage = damage
+        self.x_speed = math.cos(self.angle * (2 * math.pi / 360)) * self.speed
+        self.y_speed = math.sin(self.angle * (2 * math.pi / 360)) * self.speed
+        self.bullet_lifetime = lifetime
+        self.spawn_time = pygame.time.get_ticks()
+
+    def bullet_movement(self):
+        self.x += self.x_speed
+        self.y += self.y_speed
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
+
+        for enemy in enemy_group:
+            offset_x = enemy.rect.x - self.rect.x
+            offset_y = enemy.rect.y - self.rect.y
+            if self.mask.overlap(enemy.mask, (offset_x, offset_y)):
+                enemy.take_damage(self.damage)
+                self.kill()
+
+        if pygame.time.get_ticks() - self.spawn_time > self.bullet_lifetime:
+            self.kill()
+
+    def update(self):
+        self.bullet_movement()
+
+class Enemy(pygame.sprite.Sprite):
+    def init(self, position):
+        super().init(enemy_group, all_sprites)
+        self.image = pygame.image.load('assets/image/Enemies/Zombie/0.png').convert_alpha()
+        self.image = pygame.transform.rotozoom(self.image, 0, 0.4)
+        self.rect = self.image.get_rect()
+        self.rect.center = position
+        self.mask = pygame.mask.from_surface(self.image) 
+        self.direction = pygame.math.Vector2()
+        self.speed = ENEMY_SPEED
+        self.position = pygame.math.Vector2(position)
+        self.health = 1
+        self.damage_cooldown = 60
+
+    def take_damage(self, damage=1):
+        global score
+        self.health -= damage
+        if self.health <= 0:
+            score += ENEMY_POINTS
+            self.kill()
+
+    def deal_damage_to_player(self):
+        if player.alive and self.damage_cooldown <= 0:
+            offset_x = player.rect.x - self.rect.x
+            offset_y = player.rect.y - self.rect.y
+            if self.mask.overlap(player.mask, (offset_x, offset_y)):
+                player.take_damage()
+                self.damage_cooldown = 60
+
+    def chase_player(self):
+        if not player.alive:
+            return
+            
+        player_vector = pygame.math.Vector2(player.hitbox_rect.center)
+        enemy_vector = pygame.math.Vector2(self.rect.center)
+        if (player_vector - enemy_vector).length() > 0:
+            self.direction = (player_vector - enemy_vector).normalize()
+            self.position += self.direction * self.speed
+            self.rect.center = self.position
+
+    def update(self):
+        self.chase_player()
+        self.deal_damage_to_player()
+        if self.damage_cooldown > 0:
+            self.damage_cooldown -= 1
+
+class BossEnemy(pygame.sprite.Sprite):
+    def init(self, position, wave):
+        super().init(enemy_group, all_sprites)
+        self.image = pygame.image.load(BOSS_IMAGE_PATH).convert_alpha()
+        self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
+
+        self.rect = self.image.get_rect()
+        self.rect.center = position
+        self.mask = pygame.mask.from_surface(self.image)  
+        self.direction = pygame.math.Vector2()
+        self.speed = ENEMY_SPEED * 1.4  
+        self.position = pygame.math.Vector2(position)
+        self.health = 50 + (wave // 5 - 1) * 10 
+        self.damage_cooldown = 60
+        self.wave = wave
+
+    def take_damage(self, damage=1):
+        global score
+        self.health -= damage
+        if self.health <= 0:
+            score += BOSS_POINTS * (self.wave // 5) 
+            self.kill()
+
+    def deal_damage_to_player(self):
+        if player.alive and self.damage_cooldown <= 0:
+            offset_x = player.rect.x - self.rect.x
+            offset_y = player.rect.y - self.rect.y
+            if self.mask.overlap(player.mask, (offset_x, offset_y)):
+                player.take_damage(1)  
+                self.damage_cooldown = 60
+
+    def chase_player(self):
+        if not player.alive:
+            return
+            
+        player_vector = pygame.math.Vector2(player.hitbox_rect.center)
+        enemy_vector = pygame.math.Vector2(self.rect.center)
+        if (player_vector - enemy_vector).length() > 0:
+            self.direction = (player_vector - enemy_vector).normalize()
+            self.position += self.direction * self.speed
+            self.rect.center = self.position
+
+    def update(self):
+        self.chase_player()
+        self.deal_damage_to_player()
+        if self.damage_cooldown > 0:
+            self.damage_cooldown -= 1
+
