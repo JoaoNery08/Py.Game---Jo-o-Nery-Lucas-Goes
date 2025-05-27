@@ -8,43 +8,43 @@ import os
 
 pygame.init()
 
-#Tela config
+# Window setup
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Z-Killer')
 clock = pygame.time.Clock()
 
-#Imagens
-background = pygame.image.load('assets/image/Background/background0.png').convert_alpha()
+# Load images
+background = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Background\background0.png').convert_alpha()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-game_over_image = pygame.image.load('assets/image/Background/game_over.png').convert_alpha()
+game_over_image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Background\game_over.png').convert_alpha()
 game_over_image = pygame.transform.scale(game_over_image, (WIDTH, HEIGHT))
-start_screen_image = pygame.image.load('assets/image/Background/inicio.png').convert_alpha()
+start_screen_image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Background\inicio.png').convert_alpha()
 start_screen_image = pygame.transform.scale(start_screen_image, (WIDTH, HEIGHT))
-start_button_image = pygame.image.load('assets/image/Background/Start.png').convert_alpha()
+start_button_image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Background\Start.png').convert_alpha()
 start_button_image = pygame.transform.scale(start_button_image, (200, 100))
-character_select_button_image = pygame.image.load(r'assets\image\Background\character_select.png').convert_alpha()
+character_select_button_image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Background\character_select.png').convert_alpha()
 character_select_button_image = pygame.transform.rotozoom(character_select_button_image, 0, 1.2)
 character_select_button_image = pygame.transform.scale(character_select_button_image, (200, 100))
-ranking_button_image = pygame.image.load(r'assets\image\Background\ranking.png').convert_alpha()
+ranking_button_image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Background\ranking.png').convert_alpha()
 ranking_button_image = pygame.transform.scale(ranking_button_image, (200, 100))
 
-pygame.mixer.music.load(r'assets\sound\apocalypse.mp3')  
+pygame.mixer.music.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\sound\apocalypse.mp3')  
 pygame.mixer.music.set_volume(0.8)
-game_over_music = pygame.mixer.Sound(r'assets\sound\go_effect.mp3') 
+game_over_music = pygame.mixer.Sound(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\sound\go_effect.mp3') 
 game_over_music.set_volume(0.5)
-shoot_sound = pygame.mixer.Sound(r'assets\sound\shot.mp3')
+shoot_sound = pygame.mixer.Sound(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\sound\shot.mp3')
 shoot_sound.set_volume(0.1)
 music_loaded = True
 
-BOSS_IMAGE_PATH = r'assets\image\Personagens\Boss\alba_boss.png'
-ULTRA_BOSS_IMAGE_PATH = r'assets\image\Personagens\Boss\UltraBoss.png'
+BOSS_IMAGE_PATH = r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\Boss\alba_boss.png'
+ULTRA_BOSS_IMAGE_PATH = r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\Boss\UltraBoss.png'
 
 POWERUP_IMAGES = {
-    'health': pygame.image.load(r'assets\image\PowerUps\health.png').convert_alpha(),
-    'immunity': pygame.image.load(r'assets\image\PowerUps\immunity.png').convert_alpha(),
-    'nuke': pygame.image.load(r'assets\image\PowerUps\nuke.png').convert_alpha(),
-    'speed': pygame.image.load(r'assets\image\PowerUps\speed.png').convert_alpha(),
-    'extra_life': pygame.image.load(r'assets\image\PowerUps\extra_life.png').convert_alpha()
+    'health': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\PowerUps\health.png').convert_alpha(),
+    'immunity': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\PowerUps\immunity.png').convert_alpha(),
+    'nuke': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\PowerUps\nuke.png').convert_alpha(),
+    'speed': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\PowerUps\speed.png').convert_alpha(),
+    'extra_life': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\PowerUps\extra_life.png').convert_alpha()
 }
 
 for key in POWERUP_IMAGES:
@@ -56,7 +56,7 @@ POWERUP_IMMUNITY_DURATION = 10000  # 10 segundos
 
 character_configs = {
     'musculoso': {
-        'image': pygame.image.load(r'assets/image/Personagens/Masculino/musculoso.png').convert_alpha(),
+        'image': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\Masculino\musculoso.png').convert_alpha(),
         'speed': 6,
         'health': 150,
         'bullet_speed': 30,
@@ -67,7 +67,7 @@ character_configs = {
         'bullet_lifetime': 1000
     },
     'nerd': {
-        'image': pygame.image.load(r'assets\image\Personagens\Masculino\nerd.png').convert_alpha(),
+        'image': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\Masculino\nerd.png').convert_alpha(),
         'speed': 6,
         'health': 100,
         'bullet_speed': 40,
@@ -78,7 +78,7 @@ character_configs = {
         'bullet_lifetime': 125
     },
     'flash': {
-        'image': pygame.image.load(r'assets\image\Personagens\Masculino\flash.png').convert_alpha(),
+        'image': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\Masculino\flash.png').convert_alpha(),
         'speed': 12,
         'health': 80,
         'bullet_speed': 14,
@@ -89,7 +89,7 @@ character_configs = {
         'bullet_lifetime': 800
     },
     'mendel': {
-        'image': pygame.image.load(r'assets\image\Personagens\Masculino\mendel_ofc.png').convert_alpha(),
+        'image': pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\Masculino\mendel_ofc.png').convert_alpha(),
         'speed': 10,
         'health': 50,
         'bullet_speed': 10,
@@ -101,7 +101,7 @@ character_configs = {
     }
 }
 
-#Partes do jogo
+# Game states
 START_SCREEN = 0
 GAME_ACTIVE = 1
 GAME_OVER = 2
@@ -110,7 +110,7 @@ GET_PLAYER_NAME = 4
 SHOW_RANKING = 5
 game_state = START_SCREEN
 
-#Pontuação
+# Score
 score = 0
 player_name = ""
 font = pygame.font.Font(None, 36)
@@ -121,7 +121,7 @@ selected_character = 'musculoso'
 
 last_powerup_spawn_time = 0
 
-#Ranking
+# Ranking system
 RANKING_FILE = 'ranking.json'
 
 def load_ranking():
@@ -181,10 +181,10 @@ class Player(pygame.sprite.Sprite):
         self.speed_boost_active = False
 
         # Health bars
-        self.health_bar_full = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/full.png').convert_alpha(), 0, 0.5)
-        self.health_bar_75 = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/75.png').convert_alpha(), 0, 0.5)
-        self.health_bar_50 = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/50.png').convert_alpha(), 0, 0.5)
-        self.health_bar_25 = pygame.transform.rotozoom(pygame.image.load('assets/image/Personagens/HUD/Health/25.png').convert_alpha(), 0, 0.5)
+        self.health_bar_full = pygame.transform.rotozoom(pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\HUD\Health\full.png').convert_alpha(), 0, 0.5)
+        self.health_bar_75 = pygame.transform.rotozoom(pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\HUD\Health\75.png').convert_alpha(), 0, 0.5)
+        self.health_bar_50 = pygame.transform.rotozoom(pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\HUD\Health\50.png').convert_alpha(), 0, 0.5)
+        self.health_bar_25 = pygame.transform.rotozoom(pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Personagens\HUD\Health\25.png').convert_alpha(), 0, 0.5)
 
     def draw_health_bar(self, window):
         if self.current_health > 75:
@@ -311,9 +311,9 @@ class Player(pygame.sprite.Sprite):
             self.shoot_cooldown -= 1
 
 class Bullet(pygame.sprite.Sprite):
-    def init(self, x, y, angle, speed, damage, scale, lifetime):
-        super().init()
-        self.image = pygame.image.load('assets/image/Weapons/small_dot.png').convert_alpha()
+    def __init__(self, x, y, angle, speed, damage, scale, lifetime):
+        super().__init__()
+        self.image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Weapons\small_dot.png').convert_alpha()
         self.image = pygame.transform.rotozoom(self.image, 180, scale)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -348,9 +348,9 @@ class Bullet(pygame.sprite.Sprite):
         self.bullet_movement()
 
 class Enemy(pygame.sprite.Sprite):
-    def init(self, position):
-        super().init(enemy_group, all_sprites)
-        self.image = pygame.image.load('assets/image/Enemies/Zombie/0.png').convert_alpha()
+    def __init__(self, position):
+        super().__init__(enemy_group, all_sprites)
+        self.image = pygame.image.load(r'Py.Game---Jo-o-Nery-Lucas-Goes\assets\image\Enemies\Zombie\0.png').convert_alpha()
         self.image = pygame.transform.rotozoom(self.image, 0, 0.4)
         self.rect = self.image.get_rect()
         self.rect.center = position
@@ -394,8 +394,8 @@ class Enemy(pygame.sprite.Sprite):
             self.damage_cooldown -= 1
 
 class BossEnemy(pygame.sprite.Sprite):
-    def init(self, position, wave):
-        super().init(enemy_group, all_sprites)
+    def __init__(self, position, wave):
+        super().__init__(enemy_group, all_sprites)
         self.image = pygame.image.load(BOSS_IMAGE_PATH).convert_alpha()
         self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
 
@@ -561,7 +561,7 @@ def show_character_select():
     title_text = font.render("Select Your Character", True, (255, 255, 255))
     window.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 50))
     
-    #Opções personagem
+    # Character options
     character_rects = {}
     x_positions = [WIDTH/5, WIDTH * 2/5, WIDTH * 3/5, WIDTH * 4/5] 
     for i, (char_name, config) in enumerate(character_configs.items()):
@@ -573,7 +573,7 @@ def show_character_select():
         if char_name == selected_character:
             pygame.draw.rect(window, (0, 255, 0), rect, 3)
     
-    #Voltar 
+    # Back button
     back_button_rect = pygame.Rect(50, HEIGHT - 100, 200, 50)
     pygame.draw.rect(window, (255, 0, 0), back_button_rect)
     back_text = font.render("Back", True, (255, 255, 255))
@@ -608,19 +608,19 @@ def show_character_select():
 
 def show_start_screen():
     if music_loaded:
-        pygame.mixer.music.play(-1)  #Música em loop
+        pygame.mixer.music.play(-1)  # Tocar música em loop
     
     window.blit(start_screen_image, (0, 0))
     
-    #Start 
+    # Start button
     start_button_rect = start_button_image.get_rect(center=(WIDTH//2, HEIGHT//2))
     window.blit(start_button_image, start_button_rect)
     
-    #Character button
+    # Character select button
     char_select_button_rect = character_select_button_image.get_rect(center=(WIDTH//2, HEIGHT//2 + 110))
     window.blit(character_select_button_image, char_select_button_rect)
     
-    #Ranking button
+    # Ranking button
     ranking_button_rect = ranking_button_image.get_rect(center=(WIDTH//2, HEIGHT//2 + 220))
     window.blit(ranking_button_image, ranking_button_rect)
     
@@ -702,7 +702,7 @@ def show_get_player_name():
                 elif event.key == pygame.K_BACKSPACE:
                     input_text = input_text[:-1]
                 else:
-                    if len(input_text) < 15:  #Limite de caracteres
+                    if len(input_text) < 15:  # Limite de caracteres
                         input_text += event.unicode
                 if event.key == pygame.K_ESCAPE:
                     return START_SCREEN
