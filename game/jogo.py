@@ -441,3 +441,114 @@ class BossEnemy(pygame.sprite.Sprite):
         if self.damage_cooldown > 0:
             self.damage_cooldown -= 1
 
+class UltraBoss(pygame.sprite.Sprite):
+    def __init__(self, position, wave):
+        super().__init__(enemy_group, all_sprites)
+        self.image = pygame.image.load(ULTRA_BOSS_IMAGE_PATH).convert_alpha()
+        self.image = pygame.transform.rotozoom(self.image, 0, 1.0)  
+        
+        self.rect = self.image.get_rect()
+        self.rect.center = position
+        self.mask = pygame.mask.from_surface(self.image)
+        self.direction = pygame.math.Vector2()
+        self.speed = ENEMY_SPEED * 1.2  
+        self.position = pygame.math.Vector2(position)
+        self.health = 75 + (wave // 10 - 1) * 25  
+        self.damage_cooldown = 30  
+        self.wave = wave
+        self.damage_per_hit = 1
+
+    def take_damage(self, damage=1):
+        global score
+        self.health -= damage
+        if self.health <= 0:
+            score += BOSS_POINTS * (self.wave // 5) * 3 
+            self.kill()
+
+    def deal_damage_to_player(self):
+        if player.alive and self.damage_cooldown <= 0:
+            offset_x = player.rect.x - self.rect.x
+            offset_y = player.rect.y - self.rect.y
+            if self.mask.overlap(player.mask, (offset_x, offset_y)):
+                player.take_damage(1)
+                self.damage_cooldown = 30
+
+    def chase_player(self):
+        if not player.alive:
+            return
+            
+        player_vector = pygame.math.Vector2(player.hitbox_rect.center)
+        enemy_vector = pygame.math.Vector2(self.rect.center)
+        if (player_vector - enemy_vector).length() > 0:
+            self.direction = (player_vector - enemy_vector).normalize()
+            self.position += self.direction * self.speed
+            self.rect.center = self.position
+
+    def update(self):
+        self.chase_player()
+        self.deal_damage_to_player()
+        if self.damage_cooldown > 0:
+            self.damage_cooldown -= 1
+
+class Powerup(pygame.sprite.Sprite):
+    def __init__(self, powerup_type):
+        super().__init__()
+        self.powerup_type = powerup_type
+        self.image = POWERUP_IMAGES[powerup_type]
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(50, WIDTH - 50)
+        self.rect.y = -50
+        self.speed = 3
+        
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.y > HEIGHT:
+            self.kill()
+        
+        if player.alive and self.rect.colliderect(player.hitbox_rect):
+            player.activate_powerup(self.powerup_type)
+            self.kill()
+
+def spawn_wave(wave):
+    if wave % 10 == 0:  # UltraBoss wave (a cada 10 waves)
+        ultra_boss = UltraBoss((random.randint(-200, WIDTH + 200), random.randint(-200, -50)), wave)
+        all_sprites.add(ultra_boss)
+        enemy_group.add(ultra_boss)
+    elif wave % 5 == 0:  # Boss wave (a cada 5 waves)
+        boss = BossEnemy((random.randint(-200, WIDTH + 200), random.randint(-200, -50)), wave)
+        all_sprites.add(boss)
+        enemy_group.add(boss)
+    else:
+        num_zombies = wave * 3
+        for _ in range(num_zombies):
+            side = random.choice(["left", "right", "top", "bottom"])
+            
+            if side == "left":
+                x = random.randint(-200, -50)
+                y = random.randint(-200, HEIGHT + 200)
+            elif side == "right":
+                x = random.randint(WIDTH + 50, WIDTH + 200)
+                y = random.randint(-200, HEIGHT + 200)
+            elif side == "top":
+                x = random.randint(-200, WIDTH + 200)
+                y = random.randint(-200, -50)
+            elif side == "bottom":
+                x = random.randint(-200, WIDTH + 200)
+                y = random.randint(HEIGHT + 50, HEIGHT + 200)
+
+            zombie = Enemy((x, y))
+            all_sprites.add(zombie)
+            enemy_group.add(zombie)
+
+def draw_score(window, score):
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+    window.blit(score_text, (WIDTH - 200, 10))
+
+def draw_wave(window, wave):
+    wave_text = font.render(f"Wave: {wave}", True, (255, 255, 255))
+    window.blit(wave_text, (WIDTH - 200, 50))
+
+def draw_extra_lives(window, player):
+    life_icon = pygame.transform.scale(POWERUP_IMAGES['extra_life'], (80, 80))
+    for i in range(player.extra_lives):
+        window.blit(life_icon, (10 + i * 35, HEIGHT - 90))
